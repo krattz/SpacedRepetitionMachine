@@ -7,3 +7,6 @@ Try it. It’s pretty easy and useful.
 Your mission is to write an app that has only one page. Whenever you refresh your page it should display a random note. Your app should be fast enough to be user-friendly.
 
 Currently having problems with the Jetty dependency which is supposed to assist with the first authentication process
+
+
+Had to delete Repository in order to create one that is not a security threat to my privacy because of authentication credentials
