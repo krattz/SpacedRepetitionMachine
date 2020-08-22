@@ -1,5 +1,6 @@
 package Controller;
 
+import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.http.HttpTransport;
@@ -13,6 +14,8 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.drive.DriveScopes;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.annotation.PostConstruct;
 import java.io.*;
@@ -20,7 +23,7 @@ import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
 
-@Controller
+@Controller("/pact")
 public class HomePageController {
 
     private static HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
@@ -76,9 +79,17 @@ public class HomePageController {
                 .setDataStoreFactory(new FileDataStoreFactory(credentialsFolder.getFile())).build();
     }
 
+    @GetMapping(value={"/authentica"})
+    public String homePage() throws IOException {
+        boolean isUserAuthenticated = false;
 
-
-
-
-
+        Credential credential = flow.loadCredential(USER_iDENTIFIER_KEY);
+        if(credential != null){
+            boolean tokenValid = credential.refreshToken();
+            if(tokenValid){
+                isUserAuthenticated = true;
+            }
+        }
+    return isUserAuthenticated?"Its Authentic":"Its not Authentic";
+    }
 }
