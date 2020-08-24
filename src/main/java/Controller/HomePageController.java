@@ -2,7 +2,10 @@ package Controller;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeRequestUrl;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
+import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
+import com.google.api.client.http.FileContent;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
@@ -11,13 +14,16 @@ import com.google.api.client.json.JsonParser;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.Value;
 import com.google.api.client.util.store.FileDataStoreFactory;
+import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
+import com.google.api.services.drive.model.File;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.Collections;
@@ -90,6 +96,46 @@ public class HomePageController {
                 isUserAuthenticated = true;
             }
         }
-    return isUserAuthenticated?"Its Authentic":"Its not Authentic";
+    return isUserAuthenticated?"dashboard.html":"index.html";
+    }
+
+    @GetMapping(value={"/googlesignin"})
+    public void doGoogleSignIn(HttpServletResponse response) throws IOException {
+        GoogleAuthorizationCodeRequestUrl url = flow.newAuthorizationUrl();
+        String redirectURL = url.setRedirectUri(CALLBACK_URI).setAccessType("offline").build();
+        response.sendRedirect(redirectURL);
+    }
+
+    @GetMapping(value={"/oath"})
+    public String saveAuthorizationCode(HttpServletResponse request) throws IOException {
+        String code = request.getHeader("code");
+        if(code!=null){
+            saveToken(code);
+            return "dashboard.html";
+        }else{
+            return "index.html";
+        }
+    }
+
+    private void saveToken(String code) throws IOException {
+        GoogleTokenResponse response = flow.newTokenRequest(code).setRedirectUri(CALLBACK_URI).execute();
+        flow.createAndStoreCredential(response, USER_iDENTIFIER_KEY);
+    }
+
+
+    @GetMapping(value={"/create"})
+    public void createFile(HttpServletResponse response) throws IOException {
+        Credential cred = flow.loadCredential(USER_iDENTIFIER_KEY);
+
+        Drive drive = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, cred).setApplicationName("googledrivespringbootexample").build();
+
+        File file = new File();
+        file.setName("imagesample.jpg");
+        FileContent content = new FileContent("image/jpg", new java.io.File("/home/krattz/Pictures/steam.jpg"));
+
+        File uploadedFile =  drive.files().create(file, content).setFields("id").execute();
+
+        String fileRef = String.format("{fileID: '%s'}", uploadedFile.getId());
+        response.getWriter().write(fileRef);
     }
 }
