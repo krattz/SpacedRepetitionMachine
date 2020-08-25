@@ -1,5 +1,6 @@
 package Controller;
 
+import com.drive.project.driveproject.FileItemDTO;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeRequestUrl;
@@ -17,15 +18,18 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
+import com.google.api.services.drive.model.FileList;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -137,5 +141,22 @@ public class HomePageController {
 
         String fileRef = String.format("{fileID: '%s'}", uploadedFile.getId());
         response.getWriter().write(fileRef);
+    }
+    @GetMapping(value={"/listfiles"}, produces = {"application/json"})
+    public @ResponseBody List<FileItemDTO> listFiles() throws IOException {
+        Credential cred = flow.loadCredential(USER_iDENTIFIER_KEY);
+
+        Drive drive = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, cred).setApplicationName("googledrivespringbootexample").build();
+
+        List<FileItemDTO> responseList = new ArrayList<>();
+
+        FileList fileList = drive.files().list().setFields("files(id,name)").execute();
+        for (File file: fileList.getFiles()){
+            FileItemDTO item = new FileItemDTO();
+            item.setId(file.getId());
+            item.setName(file.getName());
+            responseList.add(item);
+        }
+        return responseList;
     }
 }
