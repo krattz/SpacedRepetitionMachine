@@ -10,12 +10,12 @@ $(document).ready(function(){
 
     });
 
-    $("#refreshFileButton").click(function(){
+   document.getElementById("#refreshFileButton").click(function(){
         $.ajax({
             url:'/listfiles',
         }).done(function(data){
             console.dir(data);
-            var fileHTML= "";
+            let fileHTML = "";
             for(file of data){
             fileHTML += '<li class="list-group-item">' + file.name + '</li>';
             }

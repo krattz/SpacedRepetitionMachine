@@ -12,7 +12,6 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.JsonGenerator;
 import com.google.api.client.json.JsonParser;
-import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.Value;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.drive.Drive;
@@ -22,7 +21,6 @@ import com.google.api.services.drive.model.FileList;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.PostConstruct;
@@ -36,7 +34,7 @@ import java.util.List;
 @Controller("/pact")
 public class HomePageController {
 
-    private static HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+    private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
     private static final JsonFactory JSON_FACTORY = new JsonFactory() {
         @Override
         public JsonParser createJsonParser(InputStream in) throws IOException {
@@ -69,7 +67,7 @@ public class HomePageController {
         }
     };
     private static final List<String> SCOPES = Collections.singletonList(DriveScopes.DRIVE);
-    private static final String USER_iDENTIFIER_KEY = "MY_DUMMY_USER";
+    private static final String USER_iDENTIFIER_KEY = "SUq8fXrJPvQ3aUiHaHaON6cg";
 
     @Value("${google.oauth.callback.uri}")
     private String CALLBACK_URI;
@@ -146,7 +144,7 @@ public class HomePageController {
     public @ResponseBody List<FileItemDTO> listFiles() throws IOException {
         Credential cred = flow.loadCredential(USER_iDENTIFIER_KEY);
 
-        Drive drive = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, cred).setApplicationName("googledrivespringbootexample").build();
+        Drive drive = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, cred).setApplicationName("driveproject").build();
 
         List<FileItemDTO> responseList = new ArrayList<>();
 
@@ -158,5 +156,25 @@ public class HomePageController {
             responseList.add(item);
         }
         return responseList;
+    }
+
+    @GetMapping(value={"/return"})
+    public void returnFile() throws IOException {
+        Credential cred = flow.loadCredential(USER_iDENTIFIER_KEY);
+        Drive drive = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, cred).setApplicationName("googledrivespringbootexample").build();
+        String pageToken = null;
+        do {
+            FileList result = drive.files().list()
+                    .setQ("mimeType='text/docx'")
+                    .setSpaces("drive")
+                    .setFields("nextPageToken, files(id, name)")
+                    .setPageToken(pageToken)
+                    .execute();
+            for (File file : result.getFiles()) {
+                System.out.printf("Found file: %s (%s)\n",
+                        file.getName(), file.getId());
+            }
+            pageToken = result.getNextPageToken();
+        } while (pageToken != null);
     }
 }
