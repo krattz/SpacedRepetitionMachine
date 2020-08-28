@@ -11,7 +11,6 @@ public class DriveprojectApplication {
 
 	public static void main(String[] args) throws IOException {
 		SpringApplication.run(DriveprojectApplication.class, args);
-		HomePageController home = new HomePageController();
-		home.homePage();
+
 	}
 }

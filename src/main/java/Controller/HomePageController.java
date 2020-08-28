@@ -165,7 +165,7 @@ public class HomePageController {
         String pageToken = null;
         do {
             FileList result = drive.files().list()
-                    .setQ("mimeType='text/docx'")
+                    .setQ("mimeType='image/jpg'")
                     .setSpaces("drive")
                     .setFields("nextPageToken, files(id, name)")
                     .setPageToken(pageToken)
